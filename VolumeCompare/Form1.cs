@@ -136,7 +136,10 @@ namespace VolumeCompare
 
         private void button3_Click(object sender, EventArgs e)
         {
-            this.Process();
+            DateTime dt1 = DateTime.Now;
+            Process();
+            DateTime dt2 = DateTime.Now;
+            MessageBox.Show((dt2 - dt1).TotalMilliseconds + "");
         }
 
         private void Process()
@@ -232,7 +235,25 @@ namespace VolumeCompare
 
         private void button4_Click(object sender, EventArgs e)
         {
+            DateTime dt1 = DateTime.Now;
             Process2();
+            DateTime dt2 = DateTime.Now;
+            MessageBox.Show((dt2 - dt1).TotalMilliseconds+"");
+        }
+
+        private void tabPage1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tabPage3_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("aaa3");
+        }
+
+        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            MessageBox.Show("aaa3");
         }
     }
 }
