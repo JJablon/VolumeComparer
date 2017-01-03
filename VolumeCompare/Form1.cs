@@ -26,14 +26,14 @@ namespace VolumeCompare
         FileInfo fi1;
         FileInfo fi2;
 
-        public long total, processed;
+        public long total, processed, output;
         System.Collections.Specialized.NameValueCollection files = new NameValueCollection();
         System.Collections.Specialized.NameValueCollection directories = new NameValueCollection();
 
         List<string> log1 = new List<string>();
         List<string> log2 = new List<string>();
         List<string> log3 = new List<string>();
-
+        List<string> log4 = new List<string>();
         public Form1()
         {
 
@@ -236,7 +236,7 @@ namespace VolumeCompare
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs ea)
         {
             BackgroundWorker worker = sender as BackgroundWorker;
-            total = 0; processed = 0;
+            total = 0; processed = 0; output = 0;
 
             TreeScan(textBox1.Text);
 
@@ -266,6 +266,7 @@ namespace VolumeCompare
                     {
                         if (fi11.Exists)
                         {
+                            output += fi11.Length;
                             string s2 = Md5Sum(fi11.FullName);//.ToUpper();
                             if (String.Compare(s1, s2) != 0)
                                 log1.Add(fi1.FullName + "             !=             " + fi11.FullName);
@@ -309,15 +310,35 @@ namespace VolumeCompare
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             dt2 = DateTime.Now;
-            MessageBox.Show((dt2 - dt1).TotalMilliseconds + "");
+            // MessageBox.Show((dt2 - dt1).TotalMilliseconds + "");
+            log4.Add("Processed " + ((float)total / 1024f / 1024f).ToString("F") +" MB of files within "+ (dt2 - dt1).Minutes+" minutes and "+(dt2-dt1).Seconds+" seconds " );
+            log4.Add("" + ((float)output / 1024f / 1024f).ToString("F") + " MB of files in the copy ");
         }
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (tabControl1.SelectedIndex == 4)
+            if (tabControl1.SelectedIndex == 4 && listBox3.Items.Count != log3.Count)
             {
                 listBox3.Items.Clear();
                 listBox3.Items.AddRange(log3.ToArray());
+
+            }
+            if (tabControl1.SelectedIndex == 3 && listBox4.Items.Count != log4.Count)
+            {
+                listBox4.Items.Clear();
+                listBox4.Items.AddRange(log4.ToArray());
+
+            }
+            if (tabControl1.SelectedIndex == 2 && listBox2.Items.Count != log2.Count)
+            {
+                listBox2.Items.Clear();
+                listBox2.Items.AddRange(log2.ToArray());
+
+            }
+            if (tabControl1.SelectedIndex == 1 && listBox1.Items.Count != log1.Count)
+            {
+                listBox1.Items.Clear();
+                listBox1.Items.AddRange(log1.ToArray());
 
             }
             // MessageBox.Show("aaa3");
