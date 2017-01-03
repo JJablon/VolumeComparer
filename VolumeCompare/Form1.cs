@@ -199,8 +199,11 @@ namespace VolumeCompare
             foreach (string f in Directory.GetFiles(sDir))
             {
                 FileInfo fi = new FileInfo(f);
-                total += fi.Length;
-                files.Add(f, fi.Length.ToString());
+                    if (!fi.Name.Contains("ntuser.dat".ToUpper())&& !fi.Name.Contains("ntuser.dat.LOG"))
+                    {
+                        total += fi.Length;
+                        files.Add(f, fi.Length.ToString());
+                    }
             }
             foreach (string d in Directory.GetDirectories(sDir))
             {
@@ -275,42 +278,59 @@ namespace VolumeCompare
                 IEnumerator myEnumerator = files.GetEnumerator();
                 foreach (String fi in files.AllKeys)
                 {
-                    long fi_size = Int64.Parse(files[fi]);
-                    string pth = fi;
-                    string s1 = Md5Sum(pth);
-                    processed += fi_size;
-                    pth = pth.Replace(textBox1.Text, "");
-                    string pth_short = pth.Replace(textBox1.Text, "");
-                    pth = textBox2.Text  + pth;
-                    DirectoryInfo di11 = new DirectoryInfo(pth);
-                    FileInfo fi11 = new FileInfo(pth);
-                    if(processed<total)
-                    worker.ReportProgress((int)(((double)((double)((double)processed / (double)total)) * ((double)100))));
-                    else  worker.ReportProgress(0); 
-                    if (di11.Exists) { log3.Add(" "); log3.Add(" "); log3.Add("Directory:   " + fi11.FullName + "    maches directory: " + pth_short+"with content as follows: "); }
-                    else
-                    {
-                        if (fi11.Exists)
+                    
+                        long fi_size = Int64.Parse(files[fi]);
+                        string pth = fi;
+                        DirectoryInfo di11 = null; ;
+                        FileInfo fi11=null;
+                        processed += fi_size;
+                        pth = pth.Replace(textBox1.Text, "");
+                        string pth_short = pth.Replace(textBox1.Text, "");
+                        pth = textBox2.Text + pth;
+                         string s1 = "";
+                         try
+                         {
+                               s1 = Md5Sum(pth);
+                                di11 = new DirectoryInfo(pth);
+                                fi11 = new FileInfo(pth);
+                                if (processed < total)
+                                    worker.ReportProgress((int)(((double)((double)((double)processed / (double)total)) * ((double)100))));
+                                else worker.ReportProgress(0);
+
+                        }
+                        catch (Exception)
+                        {log2.Add("Cant scan source file: " + fi); 
+                        }
+                    
+                
+                        if (di11!=null&&di11.Exists && fi11!=null) { log3.Add(" "); log3.Add(" "); log3.Add("Directory:   " + fi11.FullName + "    maches directory: " + pth_short+"with content as follows: "); }
+                        else if (di11!=null&&s1!=null)
                         {
-                            output += fi11.Length;
-                            string s2 = Md5Sum(fi11.FullName);//.ToUpper();
-                            if (String.Compare(s1, s2) != 0)
+                            if (fi11.Exists)
                             {
-                                log1.Add(fi + "             !=             " + fi11.FullName);
-                                log3.Add("!!!!!" + fi+ "             !=             " + fi11.FullName);
+                                try
+                                {
+                                    output += fi11.Length;
+                                    string s2 = Md5Sum(fi11.FullName);//.ToUpper();
+                                    if (String.Compare(s1, s2) != 0)
+                                    {
+                                        log1.Add(fi + "             !=             " + fi11.FullName);
+                                        log3.Add("!!!!!" + fi + "             !=             " + fi11.FullName);
+                                    }
+                                    else
+                                    {
+                                        log3.Add("File:   " + fi11.FullName + "    maches file: " + pth_short);
+                                        log3.Add(s1 + "   ====   " + s2);
+
+                                    }
+                                }
+                                catch(Exception) { log2.Add("Cant scan destination file: " + fi11.FullName); }
                             }
                             else
                             {
-                                log3.Add("File:   " + fi11.FullName + "    maches file: " + pth_short);
-                                log3.Add(s1 + "   ====   " + s2);
-
+                                log2.Add("Can't find file/directory:    " + fi11.FullName);
                             }
                         }
-                        else
-                        {
-                            log2.Add("Can't find file/directory:    " + fi11.FullName);
-                        }
-                    }
 
                 }
               
