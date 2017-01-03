@@ -23,8 +23,8 @@ namespace VolumeCompare
 
         StreamReader to = null;
         StreamReader from = null;
-        FileInfo fi1;
-        FileInfo fi2;
+        FileInfo fi_open_config_from;
+        FileInfo fi_open_config_to;
 
         public long total, processed, output;
         System.Collections.Specialized.NameValueCollection files = new NameValueCollection();
@@ -39,16 +39,16 @@ namespace VolumeCompare
 
             InitializeComponent();
             backgroundWorker1.WorkerSupportsCancellation = true;
-            fi1 = new FileInfo(loc + "\\from.cs");
-             fi2 = new FileInfo(loc + "\\to.cs");
+            fi_open_config_from = new FileInfo(loc + "\\from.cs");
+             fi_open_config_to = new FileInfo(loc + "\\to.cs");
 
-            if (!fi1.Exists)
+            if (!fi_open_config_from.Exists)
             {
-                 fi1.CreateText();
+                 fi_open_config_from.CreateText();
             }
             else
             {
-                from = fi1.OpenText();
+                from = fi_open_config_from.OpenText();
                 string read = from.ReadToEnd();
                 if (read.Length == 0)
                 {
@@ -71,12 +71,12 @@ namespace VolumeCompare
 
 
 
-            if (!fi2.Exists) {  fi2.CreateText();
+            if (!fi_open_config_to.Exists) {  fi_open_config_to.CreateText();
 
             }
             else
             {
-                to = fi2.OpenText();
+                to = fi_open_config_to.OpenText();
                 string read = to.ReadToEnd();
                 if (read.Length == 0)
                 {
@@ -128,7 +128,7 @@ namespace VolumeCompare
             if(folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
                 this.textBox1.Text = folderBrowserDialog1.SelectedPath;
-                StreamWriter s1 = new StreamWriter(fi1.FullName);
+                StreamWriter s1 = new StreamWriter(fi_open_config_from.FullName);
                 s1.Write(this.textBox1.Text);
                 s1.Close();
             }
@@ -139,13 +139,13 @@ namespace VolumeCompare
             if (folderBrowserDialog2.ShowDialog() == DialogResult.OK)
             {
                 this.textBox2.Text = folderBrowserDialog2.SelectedPath;
-                StreamWriter s2 = new StreamWriter(fi2.FullName);
+                StreamWriter s2 = new StreamWriter(fi_open_config_to.FullName);
                 s2.Write(this.textBox2.Text);
                 s2.Close();
             }
         }
 
-
+        /*
         private void Process()
         {
             DirectoryInfo di = new DirectoryInfo(textBox1.Text);
@@ -185,7 +185,7 @@ namespace VolumeCompare
                 MessageBox.Show("Inny błąd: " + e.Message + "\n\n" + e.Data);
             }
         }
-
+        */
 
 
 
@@ -195,6 +195,7 @@ namespace VolumeCompare
 
         private void TreeScan(string sDir)
         {
+            try { 
             foreach (string f in Directory.GetFiles(sDir))
             {
                 FileInfo fi = new FileInfo(f);
@@ -212,37 +213,56 @@ namespace VolumeCompare
                     log2.Add("Cant access dir:   " + d);
                 }
             }
+            }
+            catch (Exception)
+            {
+                log2.Add("Cant access dir:   " + sDir);
+            }
         }
 
         
 
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            
-        }
         DateTime dt2, dt1;
-        private void button5_Click(object sender, EventArgs e)
+        private void run_Click(object sender, EventArgs e)
         {
-            dt1 = DateTime.Now;
+           
             if (backgroundWorker1.IsBusy != true)
             {
-                if(checkBox1.Checked) listBox3.Items.Clear();
-                if (checkBox1.Checked) listBox2.Items.Clear();
-                if (checkBox1.Checked) listBox1.Items.Clear();
-                if (checkBox1.Checked) listBox4.Items.Clear();
+                this.toolStripProgressBar1.Value = 0;
+                this.toolStripStatusLabel1.Text = "0%";
+                dt1 = DateTime.Now;
+                toolStripStatusLabel2.Visible = false;
+                toolStripStatusLabel3.Visible = false;
+                toolStripStatusLabel4.Visible = false;
+                if (checkBox1.Checked)
+                {
+                    clearLogs();
+                }
 
                 backgroundWorker1.RunWorkerAsync();
 
             }
 
         }
-
-        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs ea)
+           private void clearLogs()
         {
+
+
+            listBox3.Items.Clear();
+            listBox2.Items.Clear();
+            listBox1.Items.Clear();
+            listBox4.Items.Clear();
+            log1.Clear();
+            log2.Clear();
+            log3.Clear();
+            log4.Clear();
+        }
+        private void bw1_DoWork(object sender, DoWorkEventArgs ea)
+        {
+            complete = false;
             BackgroundWorker worker = sender as BackgroundWorker;
             total = 0; processed = 0; output = 0;
-
+            files.Clear();
             TreeScan(textBox1.Text);
 
             timer1.Enabled = true;
@@ -259,14 +279,15 @@ namespace VolumeCompare
                     string pth = fi;
                     string s1 = Md5Sum(pth);
                     processed += fi_size;
-                    pth = pth.Replace(textBox1.Text, " ");
-                    string pth_short = pth.Replace(textBox1.Text, " ");
-                    pth = textBox2.Text + "\\" + pth;
+                    pth = pth.Replace(textBox1.Text, "");
+                    string pth_short = pth.Replace(textBox1.Text, "");
+                    pth = textBox2.Text  + pth;
                     DirectoryInfo di11 = new DirectoryInfo(pth);
                     FileInfo fi11 = new FileInfo(pth);
+                    if(processed<total)
                     worker.ReportProgress((int)(((double)((double)((double)processed / (double)total)) * ((double)100))));
-
-                    if (di11.Exists) { }
+                    else  worker.ReportProgress(0); 
+                    if (di11.Exists) { log3.Add(" "); log3.Add(" "); log3.Add("Directory:   " + fi11.FullName + "    maches directory: " + pth_short+"with content as follows: "); }
                     else
                     {
                         if (fi11.Exists)
@@ -274,22 +295,25 @@ namespace VolumeCompare
                             output += fi11.Length;
                             string s2 = Md5Sum(fi11.FullName);//.ToUpper();
                             if (String.Compare(s1, s2) != 0)
-                                log1.Add(fi1.FullName + "             !=             " + fi11.FullName);
+                            {
+                                log1.Add(fi + "             !=             " + fi11.FullName);
+                                log3.Add("!!!!!" + fi+ "             !=             " + fi11.FullName);
+                            }
                             else
                             {
-                                log3.Add("File:   " + fi11.FullName + "    maches file:" + pth_short);
+                                log3.Add("File:   " + fi11.FullName + "    maches file: " + pth_short);
                                 log3.Add(s1 + "   ====   " + s2);
+
                             }
                         }
                         else
                         {
-                            log2.Add("Cant find file:    " + fi11.FullName);
+                            log2.Add("Can't find file/directory:    " + fi11.FullName);
                         }
                     }
 
                 }
-                listBox1.Items.AddRange(log1.ToArray());
-                listBox2.Items.AddRange(log2.ToArray());
+              
 
             }
             catch (UnauthorizedAccessException)
@@ -298,7 +322,7 @@ namespace VolumeCompare
             }
             catch (Exception e)
             {
-                MessageBox.Show("Other error: " + e.Message + "\n\n" + e.Data);
+                MessageBox.Show("Other error: " + e.Message + "\n\n" + e.ToString());
             }
 
 
@@ -306,18 +330,123 @@ namespace VolumeCompare
             timer1.Enabled = false;
         }
 
-        private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        private void b_next_folder_Click(object sender, EventArgs e)
         {
-            toolStripStatusLabel1.Text = (e.ProgressPercentage.ToString() + "%");
-            toolStripProgressBar1.Value = e.ProgressPercentage;
+            complete = false;
+            try
+            {
+                string dirnameout = "";
+                string path1 = new DirectoryInfo(this.textBox1.Text).Parent.FullName;
+                string path2 = new DirectoryInfo(this.textBox2.Text).Parent.FullName;
+                string dirname1 = new DirectoryInfo(this.textBox1.Text).Name;
+                string dirname2 = new DirectoryInfo(this.textBox2.Text).Name;
+
+                long cnt1 = 0;
+                foreach (var dir in new DirectoryInfo(path1).GetDirectories())
+                {
+                    if (dir.FullName == this.textBox1.Text)//Path.Combine(path1, dirname1))
+                    {
+                        if (cnt1 < (new DirectoryInfo(path1).GetDirectories()).Length) { dirnameout = new DirectoryInfo(path1).GetDirectories()[cnt1 + 1].FullName; break; }
+                        else { MessageBox.Show("Reached the end of the directory!"); }
+                    }
+                    cnt1++;
+
+                }
+                if (dirnameout != "") {
+                    DirectoryInfo di = new DirectoryInfo(dirnameout);
+                    DirectoryInfo di2 = new DirectoryInfo(Path.Combine(path2, new DirectoryInfo(dirnameout).Name));
+
+                    if (di.Exists && di2.Exists) { 
+                        this.textBox1.Text = dirnameout;
+
+
+                         this.textBox2.Text = Path.Combine(path2, new DirectoryInfo(dirnameout).Name);
+
+                         StreamWriter s1 = new StreamWriter(fi_open_config_from.FullName);
+                          s1.Write(this.textBox1.Text);
+                           s1.Close();
+                        StreamWriter s2 = new StreamWriter(fi_open_config_to.FullName);
+                        s2.Write(this.textBox2.Text);
+                        s2.Close();
+
+                        if (backgroundWorker1.IsBusy != true)
+                        {
+                            this.toolStripProgressBar1.Value = 0;
+                            this.toolStripStatusLabel1.Text = "0%";
+                            dt1 = DateTime.Now;
+                            toolStripStatusLabel2.Visible = false;
+                            toolStripStatusLabel3.Visible = false;
+                            toolStripStatusLabel4.Visible = false;
+                            if (checkBox1.Checked)
+                            {
+                                clearLogs();
+                            }
+
+                            backgroundWorker1.RunWorkerAsync();
+
+                        }
+
+                    }
+                    else
+                    {
+                        if (!di.Exists)
+                            MessageBox.Show("Cant find the next directory: " + di.FullName);
+                         if(!di2.Exists)
+                            MessageBox.Show("Cant find the mirrored version in copied directory:"+ di2.FullName);
+                    }
+
+
+
+
+
+            }
+            }
+            catch (Exception) { }
         }
 
-        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void toolStripStatusLabel2_Click(object sender, EventArgs e)
         {
+            if(this.toolStripStatusLabel2.Visible == true)
+            {
+                this.tabControl1.SelectedIndex = 1;
+            }
+        }
+
+        private void bw1_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            try
+            {
+                toolStripStatusLabel1.Text = (e.ProgressPercentage.ToString() + "%");
+                toolStripProgressBar1.Value = e.ProgressPercentage;
+            }
+            catch (Exception) { }
+        }
+        bool complete = false;
+        private void bw1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            complete = true;
             dt2 = DateTime.Now;
+            if(this.toolStripProgressBar1.Value<2)
+                this.toolStripProgressBar1.Value = 100;
+            this.toolStripStatusLabel1.Text = "100%";
             // MessageBox.Show((dt2 - dt1).TotalMilliseconds + "");
             log4.Add("Processed " + ((float)total / 1024f / 1024f).ToString("F") +" MB of files within "+ (dt2 - dt1).Minutes+" minutes and "+(dt2-dt1).Seconds+" seconds " );
             log4.Add("" + ((float)output / 1024f / 1024f).ToString("F") + " MB of files in the copy ");
+            if((log1.Count != 0||log2.Count!=0)&&this.checkBox1.Checked == true) //when errors found
+            {
+                this.toolStripStatusLabel2.Visible = true;
+                
+            }
+            else
+            {
+                this.toolStripStatusLabel3.Visible = true;
+                toolStripStatusLabel4.Visible = true;
+                try
+                {
+                    toolStripStatusLabel4.Text = this.textBox1.Text.Remove(0, textBox1.Text.LastIndexOf('\\'));
+                }
+                catch (Exception) { }
+            }
         }
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
@@ -346,7 +475,6 @@ namespace VolumeCompare
                 listBox1.Items.AddRange(log1.ToArray());
 
             }
-            // MessageBox.Show("aaa3");
         }
     }
 }
