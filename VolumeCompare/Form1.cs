@@ -4,7 +4,9 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Resources;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -190,13 +192,26 @@ namespace VolumeCompare
 
 
         /////////////////////////////////////////////////////
+        public static long GetDirectorySize(DirectoryInfo di)
+        {
+            return  di.GetFiles("*.*", SearchOption.AllDirectories).Sum(file => file.Length);
+        }
 
-
-
+        public long total, processed;
         private void Process2()
         {
+            timer1.Enabled = true;
+            total = 0; processed = 0;
             DirectoryInfo di = new DirectoryInfo(textBox1.Text);
             DirectoryInfo di2 = new DirectoryInfo(textBox2.Text);
+            try
+            {
+                total = GetDirectorySize(di);
+            }
+            catch (Exception)
+            {
+
+            }
             try
             {
                 foreach (var fi in di.GetFileSystemInfos("*.*", SearchOption.AllDirectories))
@@ -206,6 +221,11 @@ namespace VolumeCompare
                     pth = textBox2.Text + "\\" + pth;
                     DirectoryInfo di11 = new DirectoryInfo(pth);
                     FileInfo fi11 = new FileInfo(pth);
+                    try
+                    {
+                        processed += ((FileInfo)fi).Length;
+                    }
+                    catch (Exception) { }
                     if (di11.Exists) { }
                     else
                     {
@@ -231,6 +251,7 @@ namespace VolumeCompare
             {
                 MessageBox.Show("Inny błąd: "+e.Message+"\n\n"+e.Data);
             }
+            timer1.Enabled = false;
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -248,7 +269,13 @@ namespace VolumeCompare
 
         private void tabPage3_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("aaa3");
+            //MessageBox.Show("aaa3");
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            toolStripStatusLabel1.Text =( (double)( (double)(processed / total)) * ((double)100)).ToString("F",
+                  CultureInfo.InvariantCulture);
         }
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
