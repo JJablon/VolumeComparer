@@ -63,9 +63,9 @@ namespace VolumeCompare
 
             }
 
-            from.Close();
+           
 
-
+            try { from.Close(); } catch (Exception) { }
 
 
 
@@ -87,8 +87,9 @@ namespace VolumeCompare
                     this.textBox2.Text = read;
                     folderBrowserDialog2.SelectedPath = read;
                 }
-                to.Close();
+                try { to.Close(); } catch (Exception) { }
             }
+           
 
         }
 
