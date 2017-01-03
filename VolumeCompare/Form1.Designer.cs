@@ -54,6 +54,7 @@
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.listBox4 = new System.Windows.Forms.ListBox();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -69,7 +70,7 @@
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 0;
-            this.button1.Text = "Źródło";
+            this.button1.Text = "Source";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
@@ -79,7 +80,7 @@
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 1;
-            this.button2.Text = "Kopia";
+            this.button2.Text = "Copy";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
@@ -113,7 +114,7 @@
             this.listBox1.FormattingEnabled = true;
             this.listBox1.Location = new System.Drawing.Point(3, 3);
             this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(744, 140);
+            this.listBox1.Size = new System.Drawing.Size(927, 140);
             this.listBox1.TabIndex = 5;
             // 
             // button4
@@ -143,6 +144,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.checkBox1);
             this.tabPage1.Controls.Add(this.button5);
             this.tabPage1.Controls.Add(this.textBox1);
             this.tabPage1.Controls.Add(this.button4);
@@ -155,7 +157,7 @@
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage1.Size = new System.Drawing.Size(933, 146);
             this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "Ustawienia";
+            this.tabPage1.Text = "Settings";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // button5
@@ -164,7 +166,7 @@
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(791, 23);
             this.button5.TabIndex = 7;
-            this.button5.Text = "button5";
+            this.button5.Text = "Start checksum comparison between selected directories";
             this.button5.UseVisualStyleBackColor = true;
             this.button5.Click += new System.EventHandler(this.button5_Click);
             // 
@@ -174,9 +176,9 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(750, 146);
+            this.tabPage2.Size = new System.Drawing.Size(933, 146);
             this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Log niezgodności";
+            this.tabPage2.Text = "Comparison log";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
             // tabPage4
@@ -186,7 +188,7 @@
             this.tabPage4.Name = "tabPage4";
             this.tabPage4.Size = new System.Drawing.Size(933, 146);
             this.tabPage4.TabIndex = 3;
-            this.tabPage4.Text = "Log błędów";
+            this.tabPage4.Text = "Error log";
             this.tabPage4.UseVisualStyleBackColor = true;
             // 
             // listBox2
@@ -205,7 +207,7 @@
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Size = new System.Drawing.Size(933, 146);
             this.tabPage3.TabIndex = 2;
-            this.tabPage3.Text = "Statystyki";
+            this.tabPage3.Text = "Stats";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
             // tabPage5
@@ -215,7 +217,7 @@
             this.tabPage5.Name = "tabPage5";
             this.tabPage5.Size = new System.Drawing.Size(933, 146);
             this.tabPage5.TabIndex = 4;
-            this.tabPage5.Text = "Log przetworzonych plików";
+            this.tabPage5.Text = "All processed files log";
             this.tabPage5.UseVisualStyleBackColor = true;
             // 
             // listBox3
@@ -241,8 +243,8 @@
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(216, 17);
-            this.toolStripStatusLabel1.Text = "Oczekiwanie na działanie użytkownika...";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(210, 17);
+            this.toolStripStatusLabel1.Text = "Waiting for user to select the options...";
             // 
             // toolStripProgressBar1
             // 
@@ -271,6 +273,18 @@
             this.listBox4.Name = "listBox4";
             this.listBox4.Size = new System.Drawing.Size(933, 146);
             this.listBox4.TabIndex = 7;
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Checked = true;
+            this.checkBox1.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBox1.Location = new System.Drawing.Point(53, 87);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(189, 17);
+            this.checkBox1.TabIndex = 8;
+            this.checkBox1.Text = "Clear all logs upon next comparisor";
+            this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -321,6 +335,7 @@
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
         private System.Windows.Forms.ListBox listBox4;
+        private System.Windows.Forms.CheckBox checkBox1;
     }
 }
 

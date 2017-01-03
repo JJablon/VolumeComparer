@@ -227,6 +227,11 @@ namespace VolumeCompare
             dt1 = DateTime.Now;
             if (backgroundWorker1.IsBusy != true)
             {
+                if(checkBox1.Checked) listBox3.Items.Clear();
+                if (checkBox1.Checked) listBox2.Items.Clear();
+                if (checkBox1.Checked) listBox1.Items.Clear();
+                if (checkBox1.Checked) listBox4.Items.Clear();
+
                 backgroundWorker1.RunWorkerAsync();
 
             }
@@ -289,11 +294,11 @@ namespace VolumeCompare
             }
             catch (UnauthorizedAccessException)
             {
-                MessageBox.Show("Nie można uzyskać dostępu do folderu");
+                MessageBox.Show("Can't access the directory; insufficient priviledges");
             }
             catch (Exception e)
             {
-                MessageBox.Show("Inny błąd: " + e.Message + "\n\n" + e.Data);
+                MessageBox.Show("Other error: " + e.Message + "\n\n" + e.Data);
             }
 
 
