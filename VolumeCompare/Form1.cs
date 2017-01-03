@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
@@ -12,6 +14,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+
 namespace VolumeCompare
 {
     public partial class Form1 : Form
@@ -22,10 +25,20 @@ namespace VolumeCompare
         StreamReader from = null;
         FileInfo fi1;
         FileInfo fi2;
+
+        public long total, processed;
+        System.Collections.Specialized.NameValueCollection files = new NameValueCollection();
+        System.Collections.Specialized.NameValueCollection directories = new NameValueCollection();
+
+        List<string> log1 = new List<string>();
+        List<string> log2 = new List<string>();
+        List<string> log3 = new List<string>();
+
         public Form1()
         {
 
             InitializeComponent();
+            backgroundWorker1.WorkerSupportsCancellation = true;
             fi1 = new FileInfo(loc + "\\from.cs");
              fi2 = new FileInfo(loc + "\\to.cs");
 
@@ -80,12 +93,7 @@ namespace VolumeCompare
         }
 
 
-        public  bool compare (string f, string t)
-        {
-            return true;
-
-
-        }
+     
         public string Md5Sum(string file)
         {
 
@@ -136,13 +144,6 @@ namespace VolumeCompare
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
-            DateTime dt1 = DateTime.Now;
-            Process();
-            DateTime dt2 = DateTime.Now;
-            MessageBox.Show((dt2 - dt1).TotalMilliseconds + "");
-        }
 
         private void Process()
         {
@@ -163,15 +164,15 @@ namespace VolumeCompare
                         if (fi11.Exists)
                         {
                             string s2 = Md5SumByProcess(fi11.FullName);//.ToUpper();
-                            if(String.Compare(s1,s2) !=0) 
-                            listBox1.Items.Add( fi1.FullName+ "             !=             " + fi11.FullName);
+                            if (String.Compare(s1, s2) != 0) log1.Add(fi1.FullName + "             !=             " + fi11.FullName);
+                            //listBox1.Items.Add( fi1.FullName+ "             !=             " + fi11.FullName);
                         }
                         else
                         {
-                            listBox1.Items.Add("Cant find:" + fi11.FullName);
+                            //listBox1.Items.Add("Cant find:" + fi11.FullName);
+                            log1.Add("Cant find:" + fi11.FullName);
                         }
                     }
-                    //listBox1.Items.Add(fi.FullName + " : " + Md5SumByProcess(fi.FullName));
                 }
             }
             catch (UnauthorizedAccessException)
@@ -191,41 +192,74 @@ namespace VolumeCompare
 
 
 
-        /////////////////////////////////////////////////////
-        public static long GetDirectorySize(DirectoryInfo di)
+        private void TreeScan(string sDir)
         {
-            return  di.GetFiles("*.*", SearchOption.AllDirectories).Sum(file => file.Length);
+            foreach (string f in Directory.GetFiles(sDir))
+            {
+                FileInfo fi = new FileInfo(f);
+                total += fi.Length;
+                files.Add(f, fi.Length.ToString());
+            }
+            foreach (string d in Directory.GetDirectories(sDir))
+            {
+                try
+                {
+                    TreeScan(d);
+                }
+                catch (Exception)
+                {
+                    log2.Add("Cant access dir:   " + d);
+                }
+            }
         }
 
-        public long total, processed;
-        private void Process2()
+        
+
+
+        private void timer1_Tick(object sender, EventArgs e)
         {
-            timer1.Enabled = true;
-            total = 0; processed = 0;
-            DirectoryInfo di = new DirectoryInfo(textBox1.Text);
-            DirectoryInfo di2 = new DirectoryInfo(textBox2.Text);
-            try
+            
+        }
+        DateTime dt2, dt1;
+        private void button5_Click(object sender, EventArgs e)
+        {
+            dt1 = DateTime.Now;
+            if (backgroundWorker1.IsBusy != true)
             {
-                total = GetDirectorySize(di);
-            }
-            catch (Exception)
-            {
+                backgroundWorker1.RunWorkerAsync();
 
             }
+
+        }
+
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs ea)
+        {
+            BackgroundWorker worker = sender as BackgroundWorker;
+            total = 0; processed = 0;
+
+            TreeScan(textBox1.Text);
+
+            timer1.Enabled = true;
+            DirectoryInfo di = new DirectoryInfo(textBox1.Text);
+            DirectoryInfo di2 = new DirectoryInfo(textBox2.Text);
+
+
             try
             {
-                foreach (var fi in di.GetFileSystemInfos("*.*", SearchOption.AllDirectories))
+                IEnumerator myEnumerator = files.GetEnumerator();
+                foreach (String fi in files.AllKeys)
                 {
-                    string s1 = Md5Sum(fi.FullName);//.ToUpper();
-                    string pth = fi.FullName.Replace(textBox1.Text, " ");
+                    long fi_size = Int64.Parse(files[fi]);
+                    string pth = fi;
+                    string s1 = Md5Sum(pth);
+                    processed += fi_size;
+                    pth = pth.Replace(textBox1.Text, " ");
+                    string pth_short = pth.Replace(textBox1.Text, " ");
                     pth = textBox2.Text + "\\" + pth;
                     DirectoryInfo di11 = new DirectoryInfo(pth);
                     FileInfo fi11 = new FileInfo(pth);
-                    try
-                    {
-                        processed += ((FileInfo)fi).Length;
-                    }
-                    catch (Exception) { }
+                    worker.ReportProgress((int)(((double)((double)((double)processed / (double)total)) * ((double)100))));
+
                     if (di11.Exists) { }
                     else
                     {
@@ -233,54 +267,59 @@ namespace VolumeCompare
                         {
                             string s2 = Md5Sum(fi11.FullName);//.ToUpper();
                             if (String.Compare(s1, s2) != 0)
-                                listBox1.Items.Add(fi1.FullName + "             !=             " + fi11.FullName);
+                                log1.Add(fi1.FullName + "             !=             " + fi11.FullName);
+                            else
+                            {
+                                log3.Add("File:   " + fi11.FullName + "    maches file:" + pth_short);
+                                log3.Add(s1 + "   ====   " + s2);
+                            }
                         }
                         else
                         {
-                            listBox1.Items.Add("Cant find:" + fi11.FullName);
+                            log2.Add("Cant find file:    " + fi11.FullName);
                         }
                     }
-                    //listBox1.Items.Add(fi.FullName + " : " + Md5SumByProcess(fi.FullName));
+
                 }
+                listBox1.Items.AddRange(log1.ToArray());
+                listBox2.Items.AddRange(log2.ToArray());
+
             }
-           // catch (UnauthorizedAccessException)
-           // {
-           //     MessageBox.Show("Nie można uzyskać dostępu do folderu");
-          //  }
-            catch (Exception e )
+            catch (UnauthorizedAccessException)
             {
-                MessageBox.Show("Inny błąd: "+e.Message+"\n\n"+e.Data);
+                MessageBox.Show("Nie można uzyskać dostępu do folderu");
             }
+            catch (Exception e)
+            {
+                MessageBox.Show("Inny błąd: " + e.Message + "\n\n" + e.Data);
+            }
+
+
+
             timer1.Enabled = false;
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            DateTime dt1 = DateTime.Now;
-            Process2();
-            DateTime dt2 = DateTime.Now;
-            MessageBox.Show((dt2 - dt1).TotalMilliseconds+"");
+            toolStripStatusLabel1.Text = (e.ProgressPercentage.ToString() + "%");
+            toolStripProgressBar1.Value = e.ProgressPercentage;
         }
 
-        private void tabPage1_Click(object sender, EventArgs e)
+        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-
-        }
-
-        private void tabPage3_Click(object sender, EventArgs e)
-        {
-            //MessageBox.Show("aaa3");
-        }
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            toolStripStatusLabel1.Text =( (double)( (double)(processed / total)) * ((double)100)).ToString("F",
-                  CultureInfo.InvariantCulture);
+            dt2 = DateTime.Now;
+            MessageBox.Show((dt2 - dt1).TotalMilliseconds + "");
         }
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            MessageBox.Show("aaa3");
+            if (tabControl1.SelectedIndex == 4)
+            {
+                listBox3.Items.Clear();
+                listBox3.Items.AddRange(log3.ToArray());
+
+            }
+            // MessageBox.Show("aaa3");
         }
     }
 }
