@@ -286,13 +286,13 @@ namespace VolumeCompare
                         processed += fi_size;
                         pth = pth.Replace(textBox1.Text, "");
                         string pth_short = pth.Replace(textBox1.Text, "");
-                        pth = textBox2.Text + pth;
+                        pth = textBox2.Text + pth_short;
                          string s1 = "";
                          try
                          {
                                s1 = Md5Sum(pth);
                                 di11 = new DirectoryInfo(pth);
-                                fi11 = new FileInfo(pth);
+                                fi11 = new FileInfo(fi);
                                 if (processed < total)
                                     worker.ReportProgress((int)(((double)((double)((double)processed / (double)total)) * ((double)100))));
                                 else worker.ReportProgress(0);
